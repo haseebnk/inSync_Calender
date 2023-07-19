@@ -1,18 +1,15 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import MainCalender from './src/MainCalender'
-import Agenda from './src/AgendaPage'
-import AgendaPage from './src/AgendaPage'
+import {StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import AgendaPage from './src/AgendaPage';
 
 const App = () => {
   return (
-    <View>
-    {/* <MainCalender/> */}
-   <AgendaPage/>
+    <View style={{backgroundColor:'black'}}>
+      <AgendaPage />
     </View>
-  )
-}
+  );
+};
 
-export default App
+export default App;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
