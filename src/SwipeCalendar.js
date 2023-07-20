@@ -12,9 +12,7 @@ import CalendarStrip from 'react-native-calendar-strip';
 import LinearGradient from 'react-native-linear-gradient';
 
 const screenHeight = Dimensions.get('window').height;
-const viewHeight = 200;
-
-const AgendaPage = () => {
+const SwipeCalendar = () => {
   const currentDate = moment().format('YYYY-MM-DD');
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [dayOffset, setDayOffset] = useState(0);
@@ -22,18 +20,40 @@ const AgendaPage = () => {
   const [rotationAnimation] = useState(new Animated.Value(0));
   const [swipeDirection, setSwipeDirection] = useState(null);
   const calendarRef = useRef(null);
+  const [eventTask, setEventTask] = useState(1);
+  React.useEffect(() => {
+    rotate();
+    fadeIn();
+  }, []);
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (event, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+    },
     onPanResponderRelease: (event, gestureState) => {
       rotationAnimation.setValue(0);
       fadeInAnimation.setValue(0);
-      if (gestureState.dx > 0) {
+      const SWIPE_THRESHOLD = 50;
+      if (gestureState.dx > SWIPE_THRESHOLD) {
+        // Right swipe
         setSwipeDirection('right');
         setDayOffset(prevOffset => prevOffset - 1);
-      } else if (gestureState.dx < 0) {
+        console.log(event, 'hello evemt');
+        if (eventTask > 1) {
+          setEventTask(prevEvent => prevEvent - 1);
+        }
+        rotate();
+        fadeIn();
+        updateSelectedDate();
+      } else if (gestureState.dx < -SWIPE_THRESHOLD) {
+        // Left swipe
         setSwipeDirection('left');
         setDayOffset(prevOffset => prevOffset + 1);
+        setEventTask(prevEvent => prevEvent + 1);
+        rotate();
+        fadeIn();
+        updateSelectedDate();
       }
     },
   });
@@ -44,11 +64,6 @@ const AgendaPage = () => {
       .format('YYYY-MM-DD');
     setSelectedDate(newDate);
   };
-
-  React.useEffect(() => {
-    rotate();
-    updateSelectedDate();
-  }, [dayOffset]);
 
   const fadeIn = () => {
     Animated.timing(fadeInAnimation, {
@@ -63,9 +78,7 @@ const AgendaPage = () => {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
-    }).start(() => {
-      fadeIn();
-    });
+    }).start();
   };
 
   const interpolatedRotateAnimation = rotationAnimation.interpolate({
@@ -90,8 +103,8 @@ const AgendaPage = () => {
         style={styles.calendarStrip}
         scrollable={true}
         calendarHeaderStyle={{color: 'white'}}
-        dateNumberStyle={{color: 'white'}}
-        dateNameStyle={{color: 'white'}}
+        dateNumberStyle={{color: 'grey'}}
+        dateNameStyle={{color: 'grey'}}
         highlightDateNumberStyle={{color: 'yellow'}}
         highlightDateNameStyle={{color: 'yellow'}}
         disabledDateNameStyle={{color: 'grey'}}
@@ -111,7 +124,9 @@ const AgendaPage = () => {
             <View style={styles.swiperChild}></View>
           </LinearGradient>
         </Animated.View>
-        <Animated.Text style={styles.text}>
+        <Animated.Text style={[styles.text, {opacity: fadeInAnimation}]}>
+          Todays task is to help {eventTask} person {'\n'}
+          {'\n'}
           {selectedDate.toString()}
         </Animated.Text>
       </View>
@@ -147,7 +162,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
     position: 'absolute',
-    top: screenHeight / 2 - viewHeight / 2,
+    width: '60%',
   },
   swiper: {
     width: 300,
@@ -159,8 +174,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   swiperChild: {
-    width: 280,
-    height: 280,
+    width: 270,
+    height: 270,
     backgroundColor: 'black',
     borderRadius: 200,
     alignItems: 'center',
@@ -169,4 +184,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(AgendaPage);
+export default React.memo(SwipeCalendar);
