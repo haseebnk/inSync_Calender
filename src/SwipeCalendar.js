@@ -21,10 +21,17 @@ const SwipeCalendar = () => {
   const [swipeDirection, setSwipeDirection] = useState(null);
   const calendarRef = useRef(null);
   const [eventTask, setEventTask] = useState(1);
+
   React.useEffect(() => {
     rotate();
     fadeIn();
+    updateSelectedDate(0); // Set the initial selected date to today
   }, []);
+
+  React.useEffect(() => {
+    // When dayOffset changes, update the selected date
+    updateSelectedDate(dayOffset);
+  }, [dayOffset]);
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -39,13 +46,12 @@ const SwipeCalendar = () => {
         // Right swipe
         setSwipeDirection('right');
         setDayOffset(prevOffset => prevOffset - 1);
-        console.log(event, 'hello evemt');
         if (eventTask > 1) {
           setEventTask(prevEvent => prevEvent - 1);
         }
         rotate();
         fadeIn();
-        updateSelectedDate();
+        updateSelectedDate(dayOffset - 1);
       } else if (gestureState.dx < -SWIPE_THRESHOLD) {
         // Left swipe
         setSwipeDirection('left');
@@ -53,14 +59,14 @@ const SwipeCalendar = () => {
         setEventTask(prevEvent => prevEvent + 1);
         rotate();
         fadeIn();
-        updateSelectedDate();
+        updateSelectedDate(dayOffset + 1);
       }
     },
   });
 
-  const updateSelectedDate = () => {
+  const updateSelectedDate = offset => {
     const newDate = moment(currentDate)
-      .add(dayOffset, 'days')
+      .add(offset, 'days')
       .format('YYYY-MM-DD');
     setSelectedDate(newDate);
   };
@@ -89,6 +95,31 @@ const SwipeCalendar = () => {
     ],
   });
 
+  const onDateSelected = date => {
+    setSelectedDate(moment(date).format('YYYY-MM-DD'));
+    console.log('Selected date:', date);
+  };
+  const markedDatesFunc = date => {
+    const dayOffset = 4 - date.date();
+
+    const nextFourDates = Array.from({length: 7}, (_, i) => {
+      return moment(date)
+        .add(dayOffset + i, 'days')
+        .format('YYYY-MM-DD');
+    });
+
+    if (nextFourDates.includes(date.format('YYYY-MM-DD'))) {
+      return {
+        dots: [
+          {
+            color: 'yellow',
+          },
+        ],
+      };
+    }
+
+    return {};
+  };
   return (
     <View style={styles.container}>
       <CalendarStrip
@@ -100,6 +131,7 @@ const SwipeCalendar = () => {
           borderWidth: 1,
           borderHighlightColor: 'white',
         }}
+        markedDates={markedDatesFunc}
         style={styles.calendarStrip}
         scrollable={true}
         calendarHeaderStyle={{color: 'white'}}
@@ -111,6 +143,14 @@ const SwipeCalendar = () => {
         disabledDateNumberStyle={{color: 'grey'}}
         iconContainer={{flex: 0.1}}
         selectedDate={selectedDate}
+        onDateSelected={onDateSelected}
+        iconRightStyle={{transform: [{rotate: '180deg'}]}} // Rotate the right icon image to 30 degrees
+        iconLeft={{
+          uri: 'https://w7.pngwing.com/pngs/65/272/png-transparent-chevron-chevron-left-left-user-interface-icon-thumbnail.png',
+        }}
+        iconRight={{
+          uri: 'https://w7.pngwing.com/pngs/65/272/png-transparent-chevron-chevron-left-left-user-interface-icon-thumbnail.png',
+        }}
       />
       <View style={styles.centerView}>
         <Animated.View
@@ -128,6 +168,7 @@ const SwipeCalendar = () => {
           Todays task is to help {eventTask} person {'\n'}
           {'\n'}
           {selectedDate.toString()}
+          {/* Add next four dates */}
         </Animated.Text>
       </View>
     </View>
