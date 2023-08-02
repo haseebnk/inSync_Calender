@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useCallback} from 'react';
 import {
   View,
   Text,
@@ -6,32 +6,62 @@ import {
   PanResponder,
   Dimensions,
   Animated,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import moment from 'moment';
 import CalendarStrip from 'react-native-calendar-strip';
-import LinearGradient from 'react-native-linear-gradient';
+import {TextInput} from 'react-native-paper';
 
 const screenHeight = Dimensions.get('window').height;
+
 const SwipeCalendar = () => {
   const currentDate = moment().format('YYYY-MM-DD');
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [dayOffset, setDayOffset] = useState(0);
-  const [fadeInAnimation] = useState(new Animated.Value(0));
-  const [rotationAnimation] = useState(new Animated.Value(0));
-  const [swipeDirection, setSwipeDirection] = useState(null);
-  const calendarRef = useRef(null);
+  const fadeInAnimation = useRef(new Animated.Value(0)).current;
+  const rotationAnimation = useRef(new Animated.Value(0)).current;
+  const [eventName, setEventName] = useState('');
+  const [events, setEvents] = useState('');
   const [eventTask, setEventTask] = useState(1);
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const handleAddEvent = () => {
+    setEvents(eventName);
+    setModalVisible(false);
+  };
+  const updateSelectedDate = useCallback(
+    offset => {
+      setSelectedDate(
+        moment(currentDate).add(offset, 'days').format('YYYY-MM-DD'),
+      );
+    },
+    [currentDate],
+  );
   React.useEffect(() => {
     rotate();
     fadeIn();
-    updateSelectedDate(0); // Set the initial selected date to today
+    updateSelectedDate(0);
   }, []);
+  const fadeIn = useCallback(() => {
+    Animated.timing(fadeInAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeInAnimation]);
 
-  React.useEffect(() => {
-    // When dayOffset changes, update the selected date
-    updateSelectedDate(dayOffset);
-  }, [dayOffset]);
+  const rotate = useCallback(() => {
+    Animated.timing(rotationAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [rotationAnimation]);
+
+  const interpolatedRotateAnimation = rotationAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -44,7 +74,6 @@ const SwipeCalendar = () => {
       const SWIPE_THRESHOLD = 50;
       if (gestureState.dx > SWIPE_THRESHOLD) {
         // Right swipe
-        setSwipeDirection('right');
         setDayOffset(prevOffset => prevOffset - 1);
         if (eventTask > 1) {
           setEventTask(prevEvent => prevEvent - 1);
@@ -54,7 +83,6 @@ const SwipeCalendar = () => {
         updateSelectedDate(dayOffset - 1);
       } else if (gestureState.dx < -SWIPE_THRESHOLD) {
         // Left swipe
-        setSwipeDirection('left');
         setDayOffset(prevOffset => prevOffset + 1);
         setEventTask(prevEvent => prevEvent + 1);
         rotate();
@@ -64,41 +92,12 @@ const SwipeCalendar = () => {
     },
   });
 
-  const updateSelectedDate = offset => {
-    const newDate = moment(currentDate)
-      .add(offset, 'days')
-      .format('YYYY-MM-DD');
-    setSelectedDate(newDate);
-  };
-
-  const fadeIn = () => {
-    Animated.timing(fadeInAnimation, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const rotate = () => {
-    Animated.timing(rotationAnimation, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const interpolatedRotateAnimation = rotationAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [
-      swipeDirection === 'left' ? '0deg' : '360deg',
-      swipeDirection === 'left' ? '360deg' : '0deg',
-    ],
-  });
-
-  const onDateSelected = date => {
-    setSelectedDate(moment(date).format('YYYY-MM-DD'));
-    console.log('Selected date:', date);
-  };
+  const onDateSelected = useCallback(
+    date => {
+      setSelectedDate(date.format('YYYY-MM-DD'));
+    },
+    [modalVisible],
+  );
   const markedDatesFunc = date => {
     const dayOffset = 4 - date.date();
 
@@ -120,10 +119,18 @@ const SwipeCalendar = () => {
 
     return {};
   };
+  const SwipeComponent = () => (
+    <Animated.View
+      style={[{transform: [{rotate: interpolatedRotateAnimation}]}]}
+      {...panResponder.panHandlers}>
+      <View style={styles.swiper}>
+        <View style={styles.swiperChild}></View>
+      </View>
+    </Animated.View>
+  );
   return (
     <View style={styles.container}>
       <CalendarStrip
-        ref={calendarRef}
         calendarAnimation={{type: 'parallel', duration: 30}}
         daySelectionAnimation={{
           type: 'border',
@@ -153,24 +160,38 @@ const SwipeCalendar = () => {
         }}
       />
       <View style={styles.centerView}>
-        <Animated.View
-          style={[{transform: [{rotate: interpolatedRotateAnimation}]}]}
-          {...panResponder.panHandlers}>
-          <LinearGradient
-            colors={['grey', '#d4c966']}
-            start={{x: 1, y: 1}}
-            end={{x: 1, y: 0}}
-            style={styles.swiper}>
-            <View style={styles.swiperChild}></View>
-          </LinearGradient>
-        </Animated.View>
-        <Animated.Text style={[styles.text, {opacity: fadeInAnimation}]}>
-          Todays task is to help {eventTask} person {'\n'}
-          {'\n'}
-          {selectedDate.toString()}
-          {/* Add next four dates */}
-        </Animated.Text>
+        <SwipeComponent />
+        <TouchableOpacity
+          style={styles.textContainer}
+          onPress={() => setModalVisible(!modalVisible)}>
+          <Animated.Text style={[styles.text, {opacity: fadeInAnimation}]}>
+            {selectedDate.toString()}
+            {events}
+          </Animated.Text>
+        </TouchableOpacity>
       </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.label}>Add Event:</Text>
+            <TextInput
+              style={styles.input}
+              value={eventName}
+              onChangeText={e => setEventName(e)}
+              placeholder="Enter event name"
+            />
+            <TouchableOpacity style={styles.addButton} onPress={handleAddEvent}>
+              <Text style={styles.addButtonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -202,13 +223,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'white',
+  },
+  textContainer: {
     position: 'absolute',
     width: '60%',
   },
   swiper: {
     width: 300,
     height: 300,
-    backgroundColor: '#7743CE',
+    backgroundColor: 'yellow',
     borderRadius: 200,
     alignItems: 'center',
     justifyContent: 'center',
@@ -222,6 +245,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    width: '90%',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  label: {
+    fontSize: 18,
+    marginBottom: 10,
+    fontWeight: 'bold',
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    backgroundColor: 'white',
+    marginBottom: 20,
+    paddingLeft: 10,
+  },
+  addButton: {
+    backgroundColor: 'yellow',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  addButtonText: {
+    color: 'gray',
+    fontSize: 18,
   },
 });
 
