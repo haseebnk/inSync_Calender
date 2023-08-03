@@ -1,5 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import { View } from 'react-native';
 import SwipeCalendar from './src/SwipeCalendar';
 
 const App = () => {
@@ -11,5 +10,3 @@ const App = () => {
 };
 
 export default App;
-
-const styles = StyleSheet.create({});

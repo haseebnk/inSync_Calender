@@ -107,17 +107,11 @@ const SwipeCalendar = () => {
     [modalVisible, events],
   );
   const markedDatesFunc = date => {
-    // Get the day of the month
     const dayOfMonth = date.date();
-
-    // Check if the date is one of the next 6 days starting from the 4th day of the month
     const isNextSixDays = dayOfMonth >= 4 && dayOfMonth <= 9;
-
-    // Check if the date has an event
     const hasEvent = events[date.format('YYYY-MM-DD')] !== undefined;
 
     if (isNextSixDays) {
-      // Show both yellow and red dots for the next 6 days starting from the 4th day of the month
       return {
         dots: [
           {
@@ -130,7 +124,6 @@ const SwipeCalendar = () => {
         events: events[date.format('YYYY-MM-DD')] || null,
       };
     } else {
-      // Show only red dot if the date has an event
       return {
         dots: hasEvent
           ? [
@@ -160,6 +153,7 @@ const SwipeCalendar = () => {
   return (
     <View style={styles.container}>
       <CalendarStrip
+        useNativeDriver={true}
         key={eventChanges}
         calendarAnimation={{type: 'parallel', duration: 30}}
         daySelectionAnimation={{
@@ -181,13 +175,9 @@ const SwipeCalendar = () => {
         iconContainer={{flex: 0.1}}
         selectedDate={selectedDate}
         onDateSelected={onDateSelected}
-        iconRightStyle={{transform: [{rotate: '180deg'}]}} // Rotate the right icon image to 30 degrees
-        iconLeft={{
-          uri: 'https://w7.pngwing.com/pngs/65/272/png-transparent-chevron-chevron-left-left-user-interface-icon-thumbnail.png',
-        }}
-        iconRight={{
-          uri: 'https://w7.pngwing.com/pngs/65/272/png-transparent-chevron-chevron-left-left-user-interface-icon-thumbnail.png',
-        }}
+        // iconRightStyle={{transform: [{rotate: '180deg'}]}}
+        iconLeft={null}
+        iconRight={null}
       />
       <View style={styles.centerView}>
         <SwipeComponent />
@@ -196,6 +186,16 @@ const SwipeCalendar = () => {
             {events[selectedDate] ? events[selectedDate] : 'Add Event'}
           </Animated.Text>
         </TouchableOpacity>
+        <View style={styles.containerBelow}>
+          <View style={{alignItems: 'center', flexDirection: 'row'}}>
+            <View style={[styles.dot, styles.redDot]} />
+            <Text style={styles.textIndicator}>Event</Text>
+          </View>
+          <View style={{alignItems: 'center', flexDirection: 'row'}}>
+            <View style={[styles.dot, styles.yellowDot]} />
+            <Text style={styles.textIndicator}>Cycle</Text>
+          </View>
+        </View>
       </View>
       <Modal
         animationType="slide"
@@ -277,6 +277,7 @@ const styles = StyleSheet.create({
   textContainer: {
     position: 'absolute',
     width: '60%',
+    zIndex:1000,
   },
   swiper: {
     width: 300,
@@ -361,6 +362,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'black',
     fontSize: 18,
+  },
+  containerBelow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '50%',
+    position: 'absolute',
+    bottom: 50,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 10,
+    marginHorizontal: 5,
+  },
+  yellowDot: {
+    backgroundColor: 'yellow',
+  },
+  redDot: {
+    backgroundColor: 'red',
+  },
+  textIndicator: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 5,
   },
 });
 
