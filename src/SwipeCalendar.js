@@ -136,7 +136,6 @@ const SwipeCalendar = () => {
       };
     }
   };
-
   const SwipeComponent = () => (
     <Animated.View
       style={[{transform: [{rotate: interpolatedRotateAnimation}]}]}
@@ -277,7 +276,7 @@ const styles = StyleSheet.create({
   textContainer: {
     position: 'absolute',
     width: '60%',
-    zIndex:1000,
+    zIndex: 1000,
   },
   swiper: {
     width: 300,
