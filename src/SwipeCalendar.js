@@ -76,9 +76,9 @@ const SwipeCalendar = () => {
     },
     onPanResponderRelease: (event, gestureState) => {
       rotationAnimation.setValue(0);
-      fadeInAnimation.setValue(0);
       const SWIPE_THRESHOLD = 50;
       if (gestureState.dx > SWIPE_THRESHOLD) {
+        fadeInAnimation.setValue(0);
         // Right swipe
         setDayOffset(prevOffset => prevOffset - 1);
         if (eventTask > 1) {
@@ -88,6 +88,7 @@ const SwipeCalendar = () => {
         fadeIn();
         updateSelectedDate(dayOffset - 1);
       } else if (gestureState.dx < -SWIPE_THRESHOLD) {
+        fadeInAnimation.setValue(0);
         // Left swipe
         setDayOffset(prevOffset => prevOffset + 1);
         setEventTask(prevEvent => prevEvent + 1);

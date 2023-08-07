@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import moment from 'moment';
-import React, { useRef, useState } from 'react';
+import React, {useRef, useState} from 'react';
 import {
   Modal,
   Platform,
@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import {
   CalendarProvider,
@@ -63,23 +63,21 @@ const ExpandableCalendarScreen = props => {
   const [eventName, setEventName] = useState('');
   const [events, setEvents] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
-  function getMarkedDates() {
+  function getMarkedDates(agendaItems, evente) {
     const marked = {};
-    agendaItems?.forEach(item => {
-      if (item.data && item.data.length > 0 && !isEmpty(item.data[0])) {
-        marked[item.title] = {marked: true};
-      } else {
-        marked[item.title] = {disabled: true};
-      }
+    // Add events from events object
+    return console.log(events,"hello event addds");
+    events.keys(evente).forEach(date => {
+      marked[date] = { ...marked[date], eventName: events[date] };
     });
+  
     return marked;
   }
   const handleAddEvent = () => {
     if (eventName) {
       const updatedEvents = {...events};
-      updatedEvents[selectedDate] = eventName; // Update the event name for the selected date
+      updatedEvents[selectedDate] = eventName;
       setEvents(updatedEvents);
-      console.log(updatedEvents);
     }
     setModalVisible(false);
   };
@@ -98,7 +96,7 @@ const ExpandableCalendarScreen = props => {
           <ExpandableCalendar
             calendarStyle={styles.calendar}
             theme={theme.current}
-            markedDates={marked.current}
+            markedDates={marked}
             leftArrowImageSource={null}
             rightArrowImageSource={null}
             animateScroll={true}

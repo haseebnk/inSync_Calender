@@ -1,5 +1,5 @@
 import moment from 'moment';
-import React, {useCallback, useRef, useState} from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Animated,
   PanResponder,
@@ -32,9 +32,9 @@ const SwipeComponent = ({
       return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
     },
     onPanResponderRelease: (event, gestureState) => {
-      fadeInAnimation.setValue(0);
       const SWIPE_THRESHOLD = 50;
       if (gestureState.dx > SWIPE_THRESHOLD) {
+        fadeInAnimation.setValue(0);
         // Right swipe
         setDayOffset(prevOffset => prevOffset - 1);
         if (eventTask > 1) {
@@ -43,6 +43,7 @@ const SwipeComponent = ({
         fadeIn();
         updateSelectedDate(dayOffset - 1);
       } else if (gestureState.dx < -SWIPE_THRESHOLD) {
+        fadeInAnimation.setValue(0);
         // Left swipe
         setDayOffset(prevOffset => prevOffset + 1);
         setEventTask(prevEvent => prevEvent + 1);
@@ -53,11 +54,7 @@ const SwipeComponent = ({
   });
   React.useEffect(() => {
     fadeIn();
-    console.log(events[selectedDate]);
   }, []);
-  React.useEffect(() => {
-    console.log(events);
-  }, [events]);
   const fadeIn = useCallback(() => {
     Animated.timing(fadeInAnimation, {
       toValue: 1,
@@ -71,7 +68,7 @@ const SwipeComponent = ({
         <TouchableOpacity
           style={styles.textContainer}
           onPress={() => setModalVisible(true)}>
-          <Animated.Text  style={[styles.text]}>
+          <Animated.Text style={[styles.text, {opacity: fadeInAnimation}]}>
             {events[selectedDate] ? events[selectedDate] : 'Add Event'}
           </Animated.Text>
         </TouchableOpacity>
