@@ -1,16 +1,16 @@
-import React, {useState, useRef, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  PanResponder,
-  Dimensions,
-  Animated,
-  Modal,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
 import moment from 'moment';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  Animated,
+  Dimensions,
+  Modal,
+  PanResponder,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import CalendarStrip from './CalendarPackage/CalendarStrip';
 
 const screenHeight = Dimensions.get('window').height;
@@ -20,7 +20,6 @@ const SwipeCalendar = () => {
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [dayOffset, setDayOffset] = useState(0);
   const fadeInAnimation = useRef(new Animated.Value(0)).current;
-  const rotationAnimation = useRef(new Animated.Value(0)).current;
   const [eventName, setEventName] = useState('');
   const [events, setEvents] = useState({});
   const [eventTask, setEventTask] = useState(1);
@@ -29,9 +28,9 @@ const SwipeCalendar = () => {
   const handleAddEvent = () => {
     if (eventName) {
       const updatedEvents = {...events};
-      updatedEvents[selectedDate] = eventName; // Update the event name for the selected date
+      updatedEvents[selectedDate] = eventName;
       setEvents(updatedEvents);
-      setEventChanges(eventChanges + 1); // Increment the eventChanges count
+      setEventChanges(eventChanges + 1);
     }
     setModalVisible(false);
   };
@@ -44,7 +43,6 @@ const SwipeCalendar = () => {
     [currentDate],
   );
   React.useEffect(() => {
-    rotate();
     fadeIn();
     updateSelectedDate(0);
   }, []);
@@ -56,35 +54,19 @@ const SwipeCalendar = () => {
     }).start();
   }, [fadeInAnimation]);
 
-  const rotate = useCallback(() => {
-    Animated.timing(rotationAnimation, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, [rotationAnimation]);
-
-  const interpolatedRotateAnimation = rotationAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: (event, gestureState) => {
       return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
     },
     onPanResponderRelease: (event, gestureState) => {
-      rotationAnimation.setValue(0);
       const SWIPE_THRESHOLD = 50;
       if (gestureState.dx > SWIPE_THRESHOLD) {
         fadeInAnimation.setValue(0);
-        // Right swipe
         setDayOffset(prevOffset => prevOffset - 1);
         if (eventTask > 1) {
           setEventTask(prevEvent => prevEvent - 1);
         }
-        rotate();
         fadeIn();
         updateSelectedDate(dayOffset - 1);
       } else if (gestureState.dx < -SWIPE_THRESHOLD) {
@@ -92,7 +74,6 @@ const SwipeCalendar = () => {
         // Left swipe
         setDayOffset(prevOffset => prevOffset + 1);
         setEventTask(prevEvent => prevEvent + 1);
-        rotate();
         fadeIn();
         updateSelectedDate(dayOffset + 1);
       }
@@ -139,7 +120,6 @@ const SwipeCalendar = () => {
   };
   const SwipeComponent = () => (
     <Animated.View
-      style={[{transform: [{rotate: interpolatedRotateAnimation}]}]}
       {...panResponder.panHandlers}>
       <View style={styles.swiper}>
         <View style={styles.swiperChild}></View>
@@ -147,7 +127,7 @@ const SwipeCalendar = () => {
     </Animated.View>
   );
   const openModal = () => {
-    setEventName(events[selectedDate] || ''); // Set initial value for eventName based on existing event for the selected date
+    setEventName(events[selectedDate] || '');
     setModalVisible(true);
   };
   return (
@@ -175,7 +155,6 @@ const SwipeCalendar = () => {
         iconContainer={{flex: 0.1}}
         selectedDate={selectedDate}
         onDateSelected={onDateSelected}
-        // iconRightStyle={{transform: [{rotate: '180deg'}]}}
         iconLeft={null}
         iconRight={null}
       />
